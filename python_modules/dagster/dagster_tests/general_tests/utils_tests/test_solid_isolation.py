@@ -20,7 +20,7 @@ from dagster._core.utility_solids import (
     input_set,
 )
 from dagster._legacy import ModeDefinition
-from dagster._utils.test import execute_solid
+from dagster._utils.test import wrap_op_in_graph_and_execute
 
 
 def test_single_solid_in_isolation():
@@ -28,7 +28,7 @@ def test_single_solid_in_isolation():
     def solid_one():
         return 1
 
-    result = execute_solid(solid_one)
+    result = wrap_op_in_graph_and_execute(solid_one)
     assert result.success
     assert result.output_value() == 1
 
@@ -38,7 +38,7 @@ def test_single_solid_with_single():
     def add_one_solid(num):
         return num + 1
 
-    result = execute_solid(add_one_solid, input_values={"num": 2})
+    result = wrap_op_in_graph_and_execute(add_one_solid, input_values={"num": 2})
 
     assert result.success
     assert result.output_value() == 3
@@ -49,7 +49,7 @@ def test_single_solid_with_multiple_inputs():
     def add_solid(num_one, num_two):
         return num_one + num_two
 
-    result = execute_solid(
+    result = wrap_op_in_graph_and_execute(
         add_solid,
         input_values={"num_one": 2, "num_two": 3},
         run_config={"loggers": {"console": {"config": {"log_level": "DEBUG"}}}},
@@ -67,7 +67,7 @@ def test_single_solid_with_config():
         assert context.op_config == 2
         ran["check_config_for_two"] = True
 
-    result = execute_solid(
+    result = wrap_op_in_graph_and_execute(
         check_config_for_two,
         run_config={"solids": {"check_config_for_two": {"config": 2}}},
     )
@@ -88,7 +88,7 @@ def test_single_solid_with_context_config():
         assert context.resources.num == 2
         ran["count"] += 1
 
-    result = execute_solid(
+    result = wrap_op_in_graph_and_execute(
         check_context_config_for_two,
         run_config={"resources": {"num": {"config": 2}}},
         mode_def=ModeDefinition(resource_defs={"num": num_resource}),
@@ -97,7 +97,7 @@ def test_single_solid_with_context_config():
     assert result.success
     assert ran["count"] == 1
 
-    result = execute_solid(
+    result = wrap_op_in_graph_and_execute(
         check_context_config_for_two,
         mode_def=ModeDefinition(resource_defs={"num": num_resource}),
     )
@@ -115,7 +115,7 @@ def test_single_solid_error():
         raise SomeError()
 
     with pytest.raises(SomeError) as e_info:
-        execute_solid(throw_error)
+        wrap_op_in_graph_and_execute(throw_error)
 
     assert isinstance(e_info.value, SomeError)
 
@@ -126,7 +126,7 @@ def test_single_solid_type_checking_output_error():
         return "ksjdfkjd"
 
     with pytest.raises(DagsterTypeCheckDidNotPass):
-        execute_solid(return_string)
+        wrap_op_in_graph_and_execute(return_string)
 
 
 def test_failing_solid_in_isolation():
@@ -138,7 +138,7 @@ def test_failing_solid_in_isolation():
         raise ThisException("nope")
 
     with pytest.raises(ThisException) as e_info:
-        execute_solid(throw_an_error)
+        wrap_op_in_graph_and_execute(throw_an_error)
 
     assert isinstance(e_info.value, ThisException)
 
@@ -152,12 +152,12 @@ def test_graphs():
     def hello_graph():
         return hello()
 
-    result = execute_solid(hello)
+    result = wrap_op_in_graph_and_execute(hello)
     assert result.success
     assert result.output_value() == "hello"
     assert result.output_values == {"result": "hello"}
 
-    result = execute_solid(hello_graph)
+    result = wrap_op_in_graph_and_execute(hello_graph)
     assert result.success
     assert result.output_value() == "hello"
     assert result.output_values == {"result": "hello"}
@@ -191,7 +191,7 @@ def test_graph_with_no_output_mappings():
         a = node_a(a_source())
         node_d(B=node_b(a), C=node_c(a))
 
-    res = execute_solid(diamond_graph)
+    res = wrap_op_in_graph_and_execute(diamond_graph)
 
     assert res.success
 
@@ -214,7 +214,7 @@ def test_execute_nested_graphs():
     nested_graph_pipeline = nesting_graph_pipeline(2, 2)
     nested_composite_solid = nested_graph_pipeline.solids[0].definition
 
-    res = execute_solid(nested_composite_solid)
+    res = wrap_op_in_graph_and_execute(nested_composite_solid)
 
     assert res.success
     assert res.node.name == "layer_0"
@@ -239,7 +239,7 @@ def test_single_solid_with_bad_inputs():
     def add_solid(num_one, num_two):
         return num_one + num_two
 
-    result = execute_solid(
+    result = wrap_op_in_graph_and_execute(
         add_solid,
         input_values={"num_one": 2, "num_two": "three"},
         run_config={"loggers": {"console": {"config": {"log_level": "DEBUG"}}}},
