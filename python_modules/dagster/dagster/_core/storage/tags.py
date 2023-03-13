@@ -57,6 +57,8 @@ MAX_RETRIES_TAG = "{prefix}max_retries".format(prefix=SYSTEM_TAG_PREFIX)
 RETRY_NUMBER_TAG = "{prefix}retry_number".format(prefix=SYSTEM_TAG_PREFIX)
 RETRY_STRATEGY_TAG = "{prefix}retry_strategy".format(prefix=SYSTEM_TAG_PREFIX)
 
+MAX_RUNTIME_TAG = "{prefix}max_runtime".format(prefix=SYSTEM_TAG_PREFIX)
+
 USER_EDITABLE_SYSTEM_TAGS = [PRIORITY_TAG, MAX_RETRIES_TAG, RETRY_STRATEGY_TAG]
 
 
