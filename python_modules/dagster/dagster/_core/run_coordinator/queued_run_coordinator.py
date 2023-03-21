@@ -235,7 +235,7 @@ class QueuedRunCoordinator(RunCoordinator[T_DagsterInstance], ConfigurableClass)
             check.failed(f"Failed to reload run {pipeline_run.run_id}")
         return run
 
-    def cancel_run(self, run_id):
+    def cancel_run(self, run_id, cancellation_reason):
         run = self._instance.get_run_by_id(run_id)
         if not run:
             return False
@@ -246,7 +246,9 @@ class QueuedRunCoordinator(RunCoordinator[T_DagsterInstance], ConfigurableClass)
                 run,
                 message="Canceling run from the queue.",
             )
-            self._instance.report_run_canceled(run)
+            self._instance.report_run_canceled(
+                run, message=None, cancellation_reason=cancellation_reason
+            )
             return True
         else:
             self._instance.report_run_canceling(
