@@ -458,6 +458,7 @@ export type DagitMutation = {
   launchPartitionBackfill: LaunchBackfillResult;
   launchPipelineExecution: LaunchRunResult;
   launchPipelineReexecution: LaunchRunReexecutionResult;
+  launchResourceVerification: LaunchResourceVerificationMutationResult;
   launchRun: LaunchRunResult;
   launchRunReexecution: LaunchRunReexecutionResult;
   logTelemetry: LogTelemetryMutationResult;
@@ -507,6 +508,10 @@ export type DagitMutationLaunchPipelineExecutionArgs = {
 export type DagitMutationLaunchPipelineReexecutionArgs = {
   executionParams?: InputMaybe<ExecutionParams>;
   reexecutionParams?: InputMaybe<ReexecutionParams>;
+};
+
+export type DagitMutationLaunchResourceVerificationArgs = {
+  resourceSelector: ResourceSelector;
 };
 
 export type DagitMutationLaunchRunArgs = {
@@ -1791,6 +1796,12 @@ export type LaunchPipelineRunSuccess = {
   run: Run;
 };
 
+export type LaunchResourceVerificationMutationResult =
+  | PythonError
+  | RepositoryLocationNotFound
+  | ResourceVerificationResult
+  | UnauthorizedError;
+
 export type LaunchRunMutation = {
   __typename: 'LaunchRunMutation';
   Output: LaunchRunResult;
@@ -2869,6 +2880,8 @@ export type ResourceDetails = {
   nestedResources: Array<NestedResourceEntry>;
   parentResources: Array<NestedResourceEntry>;
   resourceType: Scalars['String'];
+  supportsVerification: Scalars['Boolean'];
+  verificationResult: Maybe<ResourceVerificationResult>;
 };
 
 export type ResourceDetailsList = {
@@ -2952,6 +2965,12 @@ export type ResourceSelector = {
   repositoryLocationName: Scalars['String'];
   repositoryName: Scalars['String'];
   resourceName: Scalars['String'];
+};
+
+export type ResourceVerificationResult = {
+  __typename: 'ResourceVerificationResult';
+  message: Scalars['String'];
+  status: VerificationStatus;
 };
 
 export type ResourcesOrError = PythonError | RepositoryNotFoundError | ResourceDetailsList;
@@ -3839,6 +3858,11 @@ export type UsedSolid = {
   definition: ISolidDefinition;
   invocations: Array<NodeInvocationSite>;
 };
+
+export enum VerificationStatus {
+  FAILURE = 'FAILURE',
+  SUCCESS = 'SUCCESS',
+}
 
 export type Workspace = {
   __typename: 'Workspace';
@@ -4984,6 +5008,12 @@ export const buildDagitMutation = (
         : relationshipsToOmit.has('ConflictingExecutionParamsError')
         ? ({} as ConflictingExecutionParamsError)
         : buildConflictingExecutionParamsError({}, relationshipsToOmit),
+    launchResourceVerification:
+      overrides && overrides.hasOwnProperty('launchResourceVerification')
+        ? overrides.launchResourceVerification!
+        : relationshipsToOmit.has('PythonError')
+        ? ({} as PythonError)
+        : buildPythonError({}, relationshipsToOmit),
     launchRun:
       overrides && overrides.hasOwnProperty('launchRun')
         ? overrides.launchRun!
@@ -10291,6 +10321,16 @@ export const buildResourceDetails = (
           ],
     resourceType:
       overrides && overrides.hasOwnProperty('resourceType') ? overrides.resourceType! : 'sed',
+    supportsVerification:
+      overrides && overrides.hasOwnProperty('supportsVerification')
+        ? overrides.supportsVerification!
+        : true,
+    verificationResult:
+      overrides && overrides.hasOwnProperty('verificationResult')
+        ? overrides.verificationResult!
+        : relationshipsToOmit.has('ResourceVerificationResult')
+        ? ({} as ResourceVerificationResult)
+        : buildResourceVerificationResult({}, relationshipsToOmit),
   };
 };
 
@@ -10474,6 +10514,22 @@ export const buildResourceSelector = (
       overrides && overrides.hasOwnProperty('repositoryName') ? overrides.repositoryName! : 'quasi',
     resourceName:
       overrides && overrides.hasOwnProperty('resourceName') ? overrides.resourceName! : 'animi',
+  };
+};
+
+export const buildResourceVerificationResult = (
+  overrides?: Partial<ResourceVerificationResult>,
+  _relationshipsToOmit: Set<string> = new Set(),
+): {__typename: 'ResourceVerificationResult'} & ResourceVerificationResult => {
+  const relationshipsToOmit: Set<string> = new Set(_relationshipsToOmit);
+  relationshipsToOmit.add('ResourceVerificationResult');
+  return {
+    __typename: 'ResourceVerificationResult',
+    message: overrides && overrides.hasOwnProperty('message') ? overrides.message! : 'debitis',
+    status:
+      overrides && overrides.hasOwnProperty('status')
+        ? overrides.status!
+        : VerificationStatus.FAILURE,
   };
 };
 
