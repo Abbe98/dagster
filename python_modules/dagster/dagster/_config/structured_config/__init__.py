@@ -422,7 +422,7 @@ class ConfigurableResource(
         # We keep track of any resources we depend on which are not fully configured
         # so that we can retrieve them at runtime
         self._nested_partial_resources: Mapping[str, ResourceDefinition] = {
-            k: v for k, v in resource_pointers.items() if (not _is_fully_configured(v))
+            k: v for k, v in resource_pointers.items() if (not is_fully_configured(v))
         }
 
         ResourceDefinition.__init__(
@@ -527,7 +527,7 @@ class ConfigurableResource(
         return cast(TResValue, self)
 
 
-def _is_fully_configured(resource: ResourceDefinition) -> bool:
+def is_fully_configured(resource: ResourceDefinition) -> bool:
     res = (
         validate_config(
             resource.config_schema.config_type,
@@ -553,7 +553,7 @@ class PartialResource(
         # We keep track of any resources we depend on which are not fully configured
         # so that we can retrieve them at runtime
         self._nested_partial_resources: Dict[str, ResourceDefinition] = {
-            k: v for k, v in resource_pointers.items() if (not _is_fully_configured(v))
+            k: v for k, v in resource_pointers.items() if (not is_fully_configured(v))
         }
 
         schema = infer_schema_from_config_class(
