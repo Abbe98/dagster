@@ -3861,6 +3861,7 @@ export type UsedSolid = {
 
 export enum VerificationStatus {
   FAILURE = 'FAILURE',
+  NOT_RUN = 'NOT_RUN',
   SUCCESS = 'SUCCESS',
 }
 
