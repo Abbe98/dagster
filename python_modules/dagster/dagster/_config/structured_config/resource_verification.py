@@ -16,6 +16,7 @@ from dagster._serdes.serdes import whitelist_for_serdes
 class VerificationStatus(Enum):
     SUCCESS = "SUCCESS"
     FAILURE = "FAILURE"
+    NOT_RUN = "NOT_RUN"
 
 
 @whitelist_for_serdes

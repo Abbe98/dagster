@@ -40,6 +40,7 @@ from dagster._core.host_representation.origin import ExternalRepositoryOrigin
 from dagster._core.instance import DagsterInstance, InstanceRef
 from dagster._core.libraries import DagsterLibraryRegistry
 from dagster._core.origin import DEFAULT_DAGSTER_ENTRY_POINT, get_python_environment_entry_point
+from dagster._core.storage.tags import REPOSITORY_LABEL_TAG
 from dagster._core.types.loadable_target_origin import LoadableTargetOrigin
 from dagster._core.workspace.autodiscovery import LoadableTarget
 from dagster._serdes import deserialize_value, serialize_value, whitelist_for_serdes
@@ -859,7 +860,11 @@ class DagsterApiServer(DagsterApiServicer):
             )
             with DagsterInstance.from_ref(check.not_none(self._instance_ref)) as instance:
                 result = pipeline.execute_in_process(
-                    instance=instance, resources=definition.get_top_level_resources()
+                    instance=instance,
+                    resources=definition.get_top_level_resources(),
+                    tags={
+                        REPOSITORY_LABEL_TAG: resource_verification_request.repository_origin.get_label(),
+                    },
                 )
                 if result.success:
                     response = result.output_for_node(
