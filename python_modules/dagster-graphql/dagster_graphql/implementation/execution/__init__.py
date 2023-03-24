@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, AsyncIterator, Optional, Sequence, Tuple,
 
 # re-exports
 import dagster._check as check
-from dagster._core.events import EngineEventData
+from dagster._core.events import CancelationSource, EngineEventData
 from dagster._core.instance import DagsterInstance
 from dagster._core.storage.captured_log_manager import CapturedLogManager
 from dagster._core.storage.compute_log_manager import ComputeIOType, ComputeLogFileData
@@ -105,7 +105,7 @@ def terminate_pipeline_execution(graphene_info: "ResolveInfo", run_id, terminate
     if force_mark_as_canceled:
         try:
             if instance.run_coordinator and can_cancel_run:
-                instance.run_coordinator.cancel_run(run_id)
+                instance.run_coordinator.cancel_run(run_id, CancelationSource.GRAPHQL)
         except:
             instance.report_engine_event(
                 (
@@ -120,7 +120,11 @@ def terminate_pipeline_execution(graphene_info: "ResolveInfo", run_id, terminate
             )
         return _force_mark_as_canceled(instance, run_id)
 
-    if instance.run_coordinator and can_cancel_run and instance.run_coordinator.cancel_run(run_id):
+    if (
+        instance.run_coordinator
+        and can_cancel_run
+        and instance.run_coordinator.cancel_run(run_id, CancelationSource.GRAPHQL)
+    ):
         return GrapheneTerminateRunSuccess(graphene_run)
 
     return GrapheneTerminateRunFailure(
