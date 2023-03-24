@@ -926,9 +926,7 @@ ExternalResourceValue = Union[str, ExternalResourceConfigEnvVar]
 
 @whitelist_for_serdes
 class ResourceJobUsageEntry(NamedTuple):
-    """Stores information about where a resource is used in a job.
-
-    """
+    """Stores information about where a resource is used in a job."""
 
     job_name: str
     node_handles: List[NodeHandle]
