@@ -14,10 +14,14 @@ from dagster import (
     reconstructable,
 )
 from dagster._core.definitions import op
+from dagster._core.definitions.decorators.job_decorator import job
 from dagster._core.definitions.input import In
 from dagster._core.definitions.output import Out
+from dagster._core.definitions.policy import RetryPolicy
 from dagster._core.errors import DagsterUnmetExecutorRequirementsError
 from dagster._core.events import DagsterEvent, DagsterEventType
+from dagster._core.execution.api import execute_job
+from dagster._core.execution.context.compute import OpExecutionContext
 from dagster._core.execution.results import OpExecutionResult, PipelineExecutionResult
 from dagster._core.instance import DagsterInstance
 from dagster._core.storage.captured_log_manager import CapturedLogManager
@@ -557,3 +561,31 @@ def get_dynamic_op_failure_job():
 )
 def test_dynamic_failure_retry(job_fn, config_fn):
     assert_expected_failure_behavior(job_fn, config_fn)
+
+
+@op(retry_policy=RetryPolicy(max_retries=3))
+def fail_sequence(context: OpExecutionContext):
+    # 1
+    if not context.instance.run_storage.kvs_get({"failed_soft"}):
+        context.instance.run_storage.kvs_set({"failed_soft": "1"})
+        raise Exception("fail in process")
+
+    # 2
+    if not context.instance.run_storage.kvs_get({"failed_hard"}):
+        context.instance.run_storage.kvs_set({"failed_hard": "1"})
+        context.log.info("Failing hard")
+        segfault()
+
+    # 3
+    return
+
+
+@job
+def stress_retries():
+    fail_sequence()
+
+
+def test_crash_retries():
+    with instance_for_test() as instance:
+        result = execute_job(reconstructable(stress_retries), instance=instance)
+        assert result.success

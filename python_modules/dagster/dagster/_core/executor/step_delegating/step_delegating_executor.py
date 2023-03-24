@@ -40,6 +40,7 @@ class StepDelegatingExecutor(Executor):
         max_concurrent: Optional[int] = None,
         tag_concurrency_limits: Optional[List[Dict[str, Any]]] = None,
         should_verify_step: bool = False,
+        fetch_events=None,
     ):
         self._step_handler = step_handler
         self._retries = retries
@@ -63,12 +64,13 @@ class StepDelegatingExecutor(Executor):
             ),
         )
         self._should_verify_step = should_verify_step
+        self._pop_events = fetch_events or self._fetch_events_from_db
 
     @property
     def retries(self):
         return self._retries
 
-    def _pop_events(self, instance, run_id) -> Sequence[DagsterEvent]:
+    def _fetch_events_from_db(self, instance, run_id) -> Sequence[DagsterEvent]:
         events = instance.logs_after(run_id, self._event_cursor, of_type=set(DagsterEventType))
         self._event_cursor += len(events)
         dagster_events = [event.dagster_event for event in events]
