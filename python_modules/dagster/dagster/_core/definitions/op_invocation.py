@@ -1,5 +1,5 @@
 import inspect
-from typing import TYPE_CHECKING, Any, Mapping, Optional, Union, cast
+from typing import TYPE_CHECKING, Any, Mapping, Optional, TypeVar, Union, cast
 
 import dagster._check as check
 from dagster._core.errors import (
@@ -23,6 +23,8 @@ if TYPE_CHECKING:
     from .decorators.op_decorator import DecoratedOpFunction
     from .op_definition import OpDefinition
     from .output import OutputDefinition
+
+T = TypeVar("T")
 
 
 def op_invocation_result(
@@ -310,8 +312,8 @@ def _type_check_output_wrapper(
 
 
 def _type_check_function_output(
-    op_def: "OpDefinition", result: Any, context: "BoundOpExecutionContext"
-):
+    op_def: "OpDefinition", result: T, context: "BoundOpExecutionContext"
+) -> T:
     from ..execution.plan.compute_generator import validate_and_coerce_op_result_to_iterator
 
     output_defs_by_name = {output_def.name: output_def for output_def in op_def.output_defs}
@@ -321,8 +323,8 @@ def _type_check_function_output(
 
 
 def _type_check_output(
-    output_def: "OutputDefinition", output: Any, context: "BoundOpExecutionContext"
-) -> Any:
+    output_def: "OutputDefinition", output: T, context: "BoundOpExecutionContext"
+) -> T:
     """Validates and performs core type check on a provided output.
 
     Args:

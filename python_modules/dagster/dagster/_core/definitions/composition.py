@@ -18,6 +18,8 @@ from typing import (
     Union,
 )
 
+from typing_extensions import TypeAlias
+
 import dagster._check as check
 from dagster._annotations import public
 from dagster._core.definitions.op_definition import OpDefinition
@@ -26,6 +28,7 @@ from dagster._core.errors import (
     DagsterInvalidInvocationError,
     DagsterInvariantViolationError,
 )
+from dagster._utils import is_named_tuple_instance
 
 from .config import ConfigMapping
 from .dependency import (
@@ -141,7 +144,7 @@ class DynamicFanIn(NamedTuple):
     output_name: str
 
 
-InputSource = Union[
+InputSource: TypeAlias = Union[
     InvokedNodeOutputHandle,
     InputMappingNode,
     DynamicFanIn,
@@ -556,7 +559,7 @@ class PendingNodeInvocation:
         return f"{self.node_def.node_type_str} '{node_name}'"
 
     def _process_argument_node(
-        self, node_name: str, output_node, input_name, input_bindings, arg_desc
+        self, node_name: str, output_node, input_name: str, input_bindings, arg_desc: str
     ):
         from .source_asset import SourceAsset
 
@@ -595,7 +598,7 @@ class PendingNodeInvocation:
                         )
                     )
 
-        elif isinstance(output_node, tuple) and all(
+        elif is_named_tuple_instance(output_node) and all(
             map(lambda item: isinstance(item, InvokedNodeOutputHandle), output_node)
         ):
             raise DagsterInvalidDefinitionError(
@@ -798,10 +801,14 @@ class InvokedNodeDynamicOutputWrapper:
         self.output_name = check.str_param(output_name, "output_name")
         self.node_type = check.str_param(node_type, "node_type")
 
-    def describe_node(self):
+    def describe_node(self) -> str:
         return f"{self.node_type} '{self.node_name}'"
 
-    def map(self, fn):
+    def map(
+        self, fn: Callable
+    ) -> Union[
+        "InvokedNodeDynamicOutputWrapper", Tuple["InvokedNodeDynamicOutputWrapper", ...], None
+    ]:
         check.is_callable(fn)
         result = fn(InvokedNodeOutputHandle(self.node_name, self.output_name, self.node_type))
 
@@ -836,7 +843,7 @@ class InvokedNodeDynamicOutputWrapper:
     def unwrap_for_composite_mapping(self) -> InvokedNodeOutputHandle:
         return InvokedNodeOutputHandle(self.node_name, self.output_name, self.node_type)
 
-    def __iter__(self):
+    def __iter__(self) -> NoReturn:
         raise DagsterInvariantViolationError(
             'Attempted to iterate over an {cls}. This object represents the dynamic output "{out}" '
             'from the {described_node}. Use the "map" method on this object to create '
@@ -848,7 +855,7 @@ class InvokedNodeDynamicOutputWrapper:
             )
         )
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx) -> NoReturn:
         raise DagsterInvariantViolationError(
             'Attempted to index in to an {cls}. This object represents the dynamic out "{out}" '
             'from the {described_node}. Use the "map" method on this object to create '
@@ -860,7 +867,7 @@ class InvokedNodeDynamicOutputWrapper:
             )
         )
 
-    def alias(self, _):
+    def alias(self, _) -> NoReturn:
         raise DagsterInvariantViolationError(
             "In {source} {name}, attempted to call alias method for {cls}. This object represents"
             ' the dynamic out "{out}" from the already invoked {described_node}. Consider checking'
@@ -873,7 +880,7 @@ class InvokedNodeDynamicOutputWrapper:
             )
         )
 
-    def with_hooks(self, _):
+    def with_hooks(self, _) -> NoReturn:
         raise DagsterInvariantViolationError(
             "In {source} {name}, attempted to call hook method for {cls}. This object represents"
             ' the dynamic out "{out}" from the already invoked {described_node}. Consider checking'

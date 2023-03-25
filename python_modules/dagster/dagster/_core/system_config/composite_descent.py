@@ -7,7 +7,7 @@ from dagster._core.definitions.graph_definition import GraphDefinition
 from dagster._core.definitions.op_definition import OpDefinition
 from dagster._core.definitions.pipeline_definition import PipelineDefinition
 from dagster._core.definitions.resource_definition import ResourceDefinition
-from dagster._core.definitions.run_config import define_solid_dictionary_cls
+from dagster._core.definitions.run_config import define_node_shape
 from dagster._core.errors import (
     DagsterConfigMappingFunctionError,
     DagsterInvalidConfigError,
@@ -201,9 +201,9 @@ def _apply_top_level_config_mapping(
         # Dynamically construct the type that the output of the config mapping function will
         # be evaluated against
 
-        type_to_evaluate_against = define_solid_dictionary_cls(
+        type_to_evaluate_against = define_node_shape(
             solids=graph_def.nodes,
-            ignored_solids=None,
+            ignored_nodes=None,
             dependency_structure=graph_def.dependency_structure,
             resource_defs=resource_defs,
             is_using_graph_job_op_apis=is_using_graph_job_op_apis,
@@ -265,9 +265,9 @@ def _get_mapped_solids_dict(
     # skip the validation then when config mapping generates values where the nodes are not selected
     ignored_solids = graph_def.get_top_level_omitted_nodes() if graph_def.is_subselected else None
 
-    type_to_evaluate_against = define_solid_dictionary_cls(
+    type_to_evaluate_against = define_node_shape(
         solids=graph_def.nodes,
-        ignored_solids=ignored_solids,
+        ignored_nodes=ignored_solids,
         dependency_structure=graph_def.dependency_structure,
         parent_handle=current_stack.handle,
         resource_defs=resource_defs,

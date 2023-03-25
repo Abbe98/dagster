@@ -859,12 +859,12 @@ def _create_run_config_schema(
     run_config_schema_type = define_run_config_schema_type(
         RunConfigSchemaCreationData(
             pipeline_name=pipeline_def.name,
-            solids=pipeline_def.graph.nodes,
+            nodes=pipeline_def.graph.nodes,
             graph_def=pipeline_def.graph,
             dependency_structure=pipeline_def.graph.dependency_structure,
             mode_definition=mode_definition,
             logger_defs=mode_definition.loggers,
-            ignored_solids=ignored_solids,
+            ignored_nodes=ignored_solids,
             required_resources=required_resources,
             is_using_graph_job_op_apis=pipeline_def.is_job,
             direct_inputs=get_direct_input_values_from_job(pipeline_def),
