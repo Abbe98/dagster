@@ -1,9 +1,9 @@
 import inspect
 from typing import (
     Any,
+    Mapping,
     NamedTuple,
     Optional,
-    Sequence,
     Type,
     TypeVar,
     Union,
@@ -11,7 +11,11 @@ from typing import (
 
 import dagster._check as check
 from dagster._annotations import PublicAttr
-from dagster._core.definitions.metadata import MetadataEntry, MetadataUserInput, normalize_metadata
+from dagster._core.definitions.metadata import (
+    MetadataUserInput,
+    MetadataValue,
+    normalize_metadata,
+)
 from dagster._core.errors import DagsterError, DagsterInvalidDefinitionError
 from dagster._core.types.dagster_type import (
     DagsterType,
@@ -79,9 +83,8 @@ class OutputDefinition:
             default=DEFAULT_IO_MANAGER_KEY,
         )
         self._code_version = check.opt_str_param(code_version, "code_version")
-        self._metadata = check.opt_mapping_param(metadata, "metadata", key_type=str)
-        self._metadata_entries = check.is_list(
-            normalize_metadata(self._metadata, [], allow_invalid=True), MetadataEntry
+        self._metadata = normalize_metadata(
+            check.opt_mapping_param(metadata, "metadata", key_type=str), allow_invalid=True
         )
 
     @property
@@ -113,12 +116,8 @@ class OutputDefinition:
         return not self.is_required
 
     @property
-    def metadata(self) -> MetadataUserInput:
+    def metadata(self) -> Mapping[str, MetadataValue]:
         return self._metadata
-
-    @property
-    def metadata_entries(self) -> Sequence[MetadataEntry]:
-        return self._metadata_entries
 
     @property
     def is_dynamic(self) -> bool:

@@ -17,6 +17,7 @@ from dagster import (
     resource,
     with_resources,
 )
+from dagster._core.definitions.metadata import MetadataValue
 from dagster._core.test_utils import instance_for_test
 
 
@@ -32,7 +33,7 @@ def test_single_asset():
         def load_input(self, context):
             assert context.asset_key == AssetKey("asset1")
             assert context.upstream_output.asset_key == AssetKey("asset1")
-            assert context.upstream_output.metadata["a"] == "b"
+            assert context.upstream_output.metadata["a"] == MetadataValue.text("b")
             assert context.upstream_output.op_def == asset1.op
             assert context.upstream_output.name == "result"
             assert context.dagster_type.typing_type == int
@@ -76,7 +77,7 @@ def test_source_asset():
         def load_input(self, context):
             assert context.asset_key == AssetKey("asset1")
             assert context.upstream_output.asset_key == AssetKey("asset1")
-            assert context.upstream_output.metadata["a"] == "b"
+            assert context.upstream_output.metadata["a"] == MetadataValue.text("b")
             assert context.upstream_output.name == "asset1"
             assert context.dagster_type.typing_type == int
             return 5

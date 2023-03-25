@@ -33,6 +33,7 @@ from dagster._core.definitions import (
     build_assets_job,
     multi_asset,
 )
+from dagster._core.definitions.metadata import MetadataValue
 from dagster._core.definitions.policy import RetryPolicy
 from dagster._core.definitions.resource_requirement import ensure_requirements_satisfied
 from dagster._core.errors import DagsterInvalidConfigError
@@ -266,8 +267,12 @@ def test_multi_asset_internal_asset_deps_metadata():
         yield Output(2, "my_other_out_name")
 
     assert my_asset.keys == {AssetKey("my_out_name"), AssetKey("my_other_out_name")}
-    assert my_asset.op.output_def_named("my_out_name").metadata == {"foo": "bar"}
-    assert my_asset.op.output_def_named("my_other_out_name").metadata == {"bar": "foo"}
+    assert my_asset.op.output_def_named("my_out_name").metadata == {
+        "foo": MetadataValue.text("bar")
+    }
+    assert my_asset.op.output_def_named("my_other_out_name").metadata == {
+        "bar": MetadataValue.text("foo")
+    }
     assert my_asset.asset_deps == {
         AssetKey("my_out_name"): {AssetKey("my_other_out_name"), AssetKey("my_in_name")},
         AssetKey("my_other_out_name"): {AssetKey("my_in_name")},
@@ -427,7 +432,7 @@ def test_input_metadata():
     def my_asset(arg1):
         assert arg1
 
-    assert my_asset.op.input_defs[0].metadata == {"abc": 123}
+    assert my_asset.op.input_defs[0].metadata == {"abc": MetadataValue.int(123)}
 
 
 def test_input_dagster_type():
@@ -463,7 +468,7 @@ def test_all_fields():
     assert len(my_asset.op.output_defs) == 1
     output_def = my_asset.op.output_defs[0]
     assert output_def.io_manager_key == "my_io_key"
-    assert output_def.metadata["metakey"] == "metaval"
+    assert output_def.metadata["metakey"] == MetadataValue.text("metaval")
 
 
 def test_infer_input_dagster_type():

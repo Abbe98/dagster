@@ -65,9 +65,7 @@ def test_yes_output_notebook_yes_io_manager():
 
         assert result.output_for_node("hello_world", "notebook")
 
-        output_path = (
-            materializations[0].event_specific_data.materialization.metadata_entries[0].value.path
-        )
+        output_path = materializations[0].event_specific_data.materialization.metadata["path"].path
         assert os.path.exists(output_path)
 
         with open(output_path, "rb") as f:

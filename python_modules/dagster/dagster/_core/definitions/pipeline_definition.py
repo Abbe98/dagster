@@ -16,7 +16,6 @@ from typing import (
 )
 
 import dagster._check as check
-from dagster._core.definitions.metadata import MetadataEntry
 from dagster._core.definitions.policy import RetryPolicy
 from dagster._core.definitions.resource_definition import ResourceDefinition
 from dagster._core.errors import (
@@ -46,7 +45,7 @@ from .dependency import (
 )
 from .graph_definition import GraphDefinition, SubselectedGraphDefinition
 from .hook_definition import HookDefinition
-from .metadata import RawMetadataValue, normalize_metadata
+from .metadata import MetadataValue, RawMetadataValue, normalize_metadata
 from .mode import ModeDefinition
 from .node_definition import NodeDefinition
 from .op_definition import OpDefinition
@@ -157,7 +156,7 @@ class PipelineDefinition:
     _graph_def: GraphDefinition
     _description: Optional[str]
     _tags: Mapping[str, str]
-    _metadata: Sequence[MetadataEntry]
+    _metadata: Mapping[str, MetadataValue]
     _current_level_node_defs: Sequence[NodeDefinition]
     _mode_definitions: Sequence[ModeDefinition]
     _hook_defs: AbstractSet[HookDefinition]
@@ -192,7 +191,6 @@ class PipelineDefinition:
         ] = None,  # https://github.com/dagster-io/dagster/issues/2115
         version_strategy: Optional[VersionStrategy] = None,
         asset_layer: Optional[AssetLayer] = None,
-        metadata_entries: Optional[Sequence[MetadataEntry]] = None,
         _should_validate_resource_requirements: bool = True,
     ):
         # If a graph is specified directly use it
@@ -224,9 +222,9 @@ class PipelineDefinition:
         self._description = check.opt_str_param(description, "description")
         self._tags = validate_tags(tags)
 
-        metadata_entries = check.opt_sequence_param(metadata_entries, "metadata_entries")
-        metadata = check.opt_mapping_param(metadata, "metadata")
-        self._metadata_entries = normalize_metadata(metadata, metadata_entries)
+        self._metadata = normalize_metadata(
+            check.opt_mapping_param(metadata, "metadata", key_type=str)
+        )
 
         self._current_level_node_defs = self._graph_def.node_defs
 
@@ -360,8 +358,8 @@ class PipelineDefinition:
         return merge_dicts(self._graph_def.tags, self._tags)
 
     @property
-    def metadata(self) -> Sequence[MetadataEntry]:
-        return self._metadata_entries
+    def metadata(self) -> Mapping[str, MetadataValue]:
+        return self._metadata
 
     @property
     def description(self) -> Optional[str]:
