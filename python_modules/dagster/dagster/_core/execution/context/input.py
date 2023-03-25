@@ -15,7 +15,7 @@ import dagster._check as check
 from dagster._annotations import public
 from dagster._core.definitions.events import AssetKey, AssetObservation
 from dagster._core.definitions.metadata import (
-    MetadataEntry,
+    MetadataValue,
 )
 from dagster._core.definitions.partition import PartitionsSubset
 from dagster._core.definitions.partition_key_range import PartitionKeyRange
@@ -104,7 +104,7 @@ class InputContext:
         self._job_name = job_name
         self._op_def = op_def
         self._config = config
-        self._metadata = metadata
+        self._metadata = metadata or {}
         self._upstream_output = upstream_output
         self._dagster_type = dagster_type
         self._log = log_manager
@@ -132,7 +132,6 @@ class InputContext:
 
         self._events: List["DagsterEvent"] = []
         self._observations: List[AssetObservation] = []
-        self._metadata_entries: List[MetadataEntry] = []
         self._instance = instance
 
     def __enter__(self):
@@ -486,7 +485,7 @@ class InputContext:
         from dagster._core.events import DagsterEvent
 
         metadata = check.mapping_param(metadata, "metadata", key_type=str)
-        self._metadata_entries.extend(normalize_metadata(metadata, []))
+        self._metadata = {**self._metadata, **normalize_metadata(metadata)}
         if self.has_asset_key:
             check.opt_str_param(description, "description")
 
@@ -526,9 +525,9 @@ class InputContext:
         """
         return self._observations
 
-    def consume_metadata_entries(self) -> Sequence[MetadataEntry]:
-        result = self._metadata_entries
-        self._metadata_entries = []
+    def consume_metadata(self) -> Mapping[str, MetadataValue]:
+        result = self._metadata
+        self._metadata = {}
         return result
 
 

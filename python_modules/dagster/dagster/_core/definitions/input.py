@@ -7,7 +7,6 @@ from typing import (
     Mapping,
     NamedTuple,
     Optional,
-    Sequence,
     Set,
     Type,
     TypeVar,
@@ -18,7 +17,7 @@ import dagster._check as check
 from dagster._annotations import PublicAttr
 from dagster._core.definitions.events import AssetKey
 from dagster._core.definitions.metadata import (
-    MetadataEntry,
+    MetadataValue,
     RawMetadataValue,
     normalize_metadata,
 )
@@ -101,8 +100,7 @@ class InputDefinition:
     _default_value: Any
     _input_manager_key: Optional[str]
     _root_manager_key: Optional[str]
-    _metadata: Mapping[str, RawMetadataValue]
-    _metadata_entries: Sequence[MetadataEntry]
+    _metadata: Mapping[str, MetadataValue]
     _asset_key: Optional[Union[AssetKey, Callable[["InputContext"], AssetKey]]]
     _asset_partitions_fn: Optional[Callable[["InputContext"], Set[str]]]
 
@@ -145,8 +143,9 @@ class InputDefinition:
 
         self._input_manager_key = check.opt_str_param(input_manager_key, "input_manager_key")
 
-        self._metadata = check.opt_mapping_param(metadata, "metadata", key_type=str)
-        self._metadata_entries = normalize_metadata(self._metadata, [], allow_invalid=True)
+        self._metadata = normalize_metadata(
+            check.opt_mapping_param(metadata, "metadata", key_type=str), allow_invalid=True
+        )
 
         if asset_key:
             experimental_arg_warning("asset_key", "InputDefinition.__init__")
@@ -201,16 +200,12 @@ class InputDefinition:
         return self._input_manager_key
 
     @property
-    def metadata(self) -> Mapping[str, RawMetadataValue]:
+    def metadata(self) -> Mapping[str, MetadataValue]:
         return self._metadata
 
     @property
     def is_asset(self) -> bool:
         return self._asset_key is not None
-
-    @property
-    def metadata_entries(self) -> Sequence[MetadataEntry]:
-        return self._metadata_entries
 
     @property
     def hardcoded_asset_key(self) -> Optional[AssetKey]:

@@ -33,6 +33,7 @@ from dagster._core.definitions import (
     build_assets_job,
     multi_asset,
 )
+from dagster._core.definitions.metadata import MetadataValue
 from dagster._core.definitions.policy import RetryPolicy
 from dagster._core.definitions.resource_requirement import ensure_requirements_satisfied
 from dagster._core.errors import DagsterInvalidConfigError
@@ -427,7 +428,7 @@ def test_input_metadata():
     def my_asset(arg1):
         assert arg1
 
-    assert my_asset.op.input_defs[0].metadata == {"abc": 123}
+    assert my_asset.op.input_defs[0].metadata == {"abc": MetadataValue.int(123)}
 
 
 def test_input_dagster_type():
