@@ -12,7 +12,7 @@ from dagster import (
 from dagster._core.definitions.decorators import graph
 from dagster._core.definitions.input import In
 from dagster._core.definitions.output import Out
-from dagster._core.test_utils import nesting_graph_pipeline
+from dagster._core.test_utils import nesting_graph_job
 from dagster._core.utility_solids import (
     create_op_with_deps,
     create_root_op,
@@ -211,7 +211,7 @@ def test_graph_with_no_output_mappings():
 
 
 def test_execute_nested_graphs():
-    nested_graph_pipeline = nesting_graph_pipeline(2, 2)
+    nested_graph_pipeline = nesting_graph_job(2, 2)
     nested_composite_solid = nested_graph_pipeline.solids[0].definition
 
     res = wrap_op_in_graph_and_execute(nested_composite_solid)

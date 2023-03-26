@@ -26,7 +26,7 @@ from dagster import (
 )
 from dagster._core.definitions.decorators import schedule
 from dagster._core.definitions.output import Out
-from dagster._core.test_utils import nesting_graph_pipeline
+from dagster._core.test_utils import nesting_graph_job
 from dagster._legacy import (
     ModeDefinition,
     default_executors,
@@ -416,7 +416,7 @@ def define_long_running_pipeline_celery():
 
 
 def define_large_pipeline_celery():
-    return nesting_graph_pipeline(
+    return nesting_graph_job(
         depth=1,
         num_children=6,
         mode_defs=celery_mode_defs(),
