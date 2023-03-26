@@ -198,7 +198,7 @@ class UnboundOpExecutionContext(OpExecutionContext):
         return self._log
 
     @property
-    def solid_handle(self) -> NodeHandle:
+    def node_handle(self) -> NodeHandle:
         raise DagsterInvalidPropertyError(_property_msg("solid_handle", "property"))
 
     @property
@@ -458,7 +458,7 @@ class BoundOpExecutionContext(OpExecutionContext):
         return self._log
 
     @property
-    def solid_handle(self) -> NodeHandle:
+    def node_handle(self) -> NodeHandle:
         raise DagsterInvalidPropertyError(_property_msg("solid_handle", "property"))
 
     @property
